@@ -1,0 +1,725 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>配置向导 — 高考志愿填报 Agent</title>
+  <style>
+    :root {
+      --bg:      #F6F6F1;
+      --surface: #FFFFFF;
+      --fg:      #111827;
+      --fg-2:    #4B5563;
+      --muted:   #9CA3AF;
+      --border:  #E5E7EB;
+      --accent:  #FF5701;
+      --accent-hover: #e04d00;
+      --success: #059669;
+      --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
+      --font-body: "Inter", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      --font-mono: "JetBrains Mono", "SF Mono", "Fira Code", "Consolas", monospace;
+      --radius-sm: 6px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+    }
+
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+    body{
+      font-family:var(--font-body);
+      color:var(--fg);
+      background:var(--bg);
+      line-height:1.6;
+      font-size:15px;
+      min-height:100vh;
+    }
+
+    /* ===== Header ===== */
+    .header{
+      text-align:center;
+      padding:48px 20px 20px;
+    }
+    .header h1{
+      font-family:var(--font-display);
+      font-size:clamp(26px,4vw,40px);
+      font-weight:700;
+      letter-spacing:-0.02em;
+      color:var(--fg);
+      margin-bottom:6px;
+    }
+    .header .subtitle{
+      color:var(--fg-2);
+      font-size:15px;
+    }
+
+    /* ===== Progress ===== */
+    .progress-wrap{
+      max-width:720px;
+      margin:0 auto 32px;
+      padding:0 20px;
+    }
+    .progress-bar{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:0;
+    }
+    .progress-dot{
+      width:34px;height:34px;
+      border-radius:50%;
+      background:var(--surface);
+      border:2px solid var(--border);
+      display:flex;align-items:center;justify-content:center;
+      font-weight:600;font-size:13px;
+      color:var(--muted);
+      cursor:pointer;
+      transition:all 0.25s;
+      flex-shrink:0;
+      user-select:none;
+    }
+    .progress-dot:hover{border-color:var(--accent);color:var(--accent)}
+    .progress-dot.active{background:var(--accent);border-color:var(--accent);color:#fff}
+    .progress-dot.done{background:var(--success);border-color:var(--success);color:#fff}
+    .progress-line{
+      flex:1;height:2px;background:var(--border);
+      max-width:64px;min-width:16px;
+      transition:background 0.3s;
+    }
+    .progress-line.done{background:var(--success)}
+    .progress-labels{
+      display:flex;justify-content:center;gap:0;
+      margin-top:6px;padding:0 4px;
+    }
+    .progress-label{
+      font-size:10px;color:var(--muted);
+      text-align:center;width:74px;flex-shrink:0;
+      transition:color 0.25s;
+    }
+    .progress-label.active{color:var(--accent);font-weight:600}
+
+    /* ===== Main Card ===== */
+    .main-wrap{
+      max-width:760px;
+      margin:0 auto 60px;
+      padding:0 20px;
+    }
+    .step-card{
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:var(--radius-lg);
+      padding:36px 40px 32px;
+      box-shadow:0 1px 3px rgba(0,0,0,0.05);
+      display:none;
+      animation:cardIn 0.3s ease;
+    }
+    .step-card.active{display:block}
+    @keyframes cardIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+    .step-card h2{
+      font-family:var(--font-display);
+      font-size:24px;font-weight:700;
+      margin-bottom:6px;color:var(--fg);
+      letter-spacing:-0.01em;
+    }
+    .step-card h3{
+      font-size:17px;font-weight:600;
+      margin:24px 0 8px;color:var(--fg);
+    }
+    .step-card .step-desc{
+      color:var(--fg-2);margin-bottom:24px;font-size:15px;
+    }
+    .step-card p{color:var(--fg-2);margin-bottom:10px}
+    .step-card ul{margin:6px 0 14px 20px;color:var(--fg-2)}
+    .step-card ul li{margin-bottom:5px}
+
+    /* ===== Code ===== */
+    .code-block{
+      position:relative;
+      background:#1e1e2e;
+      color:#cdd6f4;
+      border-radius:var(--radius-md);
+      padding:14px 18px;
+      margin:10px 0 6px;
+      font-family:var(--font-mono);
+      font-size:13px;
+      line-height:1.7;
+      overflow-x:auto;
+      white-space:pre-wrap;
+      word-break:break-all;
+    }
+    .code-block .c1{color:#6c7086}
+    .code-block .c2{color:#89b4fa}
+    .code-block .c3{color:#a6e3a1}
+
+    .btn-copy{
+      position:absolute;top:8px;right:10px;
+      background:rgba(255,255,255,0.08);
+      border:1px solid rgba(255,255,255,0.12);
+      color:#cdd6f4;padding:3px 10px;
+      border-radius:var(--radius-sm);
+      cursor:pointer;font-size:11px;
+      font-family:var(--font-body);
+      transition:all 0.2s;
+    }
+    .btn-copy:hover{background:rgba(255,255,255,0.18)}
+    .btn-copy.copied{background:var(--success);border-color:var(--success);color:#fff}
+
+    /* ===== Tip Boxes ===== */
+    .tip{background:#fef3c7;border:1px solid #fcd34d;border-radius:var(--radius-md);padding:12px 16px;margin:14px 0;font-size:13px;color:#92400e;display:flex;gap:8px;align-items:flex-start}
+    .info{background:#e0f2fe;border:1px solid #7dd3fc;border-radius:var(--radius-md);padding:12px 16px;margin:14px 0;font-size:13px;color:#075985;display:flex;gap:8px;align-items:flex-start}
+    .warn{background:#fee2e2;border:1px solid #fca5a5;border-radius:var(--radius-md);padding:12px 16px;margin:14px 0;font-size:13px;color:#991b1b;display:flex;gap:8px;align-items:flex-start}
+    .tip .icon,.info .icon,.warn .icon{font-size:16px;flex-shrink:0;margin-top:1px}
+
+    /* ===== Terminal Guide ===== */
+    .terminal-guide{
+      background:linear-gradient(135deg,#f0f9ff,#e0f2fe);
+      border:2px solid #38bdf8;
+      border-radius:var(--radius-md);
+      padding:16px 20px;
+      margin:12px 0;
+      font-size:13px;
+      color:#0c4a6e;
+      line-height:1.9;
+    }
+    .terminal-guide strong{color:#0369a1}
+    .terminal-guide .steps{
+      display:flex;flex-direction:column;gap:6px;
+      margin:8px 0;
+    }
+    .terminal-guide .step{
+      display:flex;align-items:flex-start;gap:10px;
+    }
+    .terminal-guide .step-num{
+      flex-shrink:0;
+      width:26px;height:26px;
+      border-radius:50%;
+      background:#38bdf8;
+      color:#fff;
+      display:flex;align-items:center;justify-content:center;
+      font-weight:700;font-size:12px;
+    }
+    .terminal-guide .step-text{flex:1;padding-top:2px}
+    .terminal-guide .key{
+      display:inline-block;
+      background:#fff;
+      border:2px solid #38bdf8;
+      border-radius:4px;
+      padding:0 7px;
+      font-family:var(--font-mono);
+      font-size:12px;
+      font-weight:700;
+      color:#0369a1;
+      margin:0 2px;
+    }
+
+    /* ===== Platform Tabs ===== */
+    .tabs{
+      display:flex;gap:3px;
+      background:var(--bg);border-radius:var(--radius-sm);
+      padding:3px;margin:10px 0;width:fit-content;
+    }
+    .tab{
+      padding:5px 14px;border-radius:var(--radius-sm);
+      cursor:pointer;font-size:13px;font-weight:500;
+      color:var(--fg-2);border:none;background:none;
+      font-family:var(--font-body);transition:all 0.2s;
+    }
+    .tab.active{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,0.06)}
+    .tab-content{display:none}
+    .tab-content.active{display:block}
+
+    /* ===== .env Form ===== */
+    .env-group{
+      background:var(--bg);border:1px solid var(--border);
+      border-radius:var(--radius-md);padding:18px 20px;margin-bottom:14px;
+    }
+    .env-group h4{
+      font-family:var(--font-display);font-size:15px;font-weight:700;
+      margin-bottom:12px;color:var(--fg);display:flex;align-items:center;gap:8px;
+    }
+    .badge{
+      font-size:10px;font-family:var(--font-body);font-weight:600;
+      padding:1px 8px;border-radius:99px;
+    }
+    .badge.req{background:#fee2e2;color:#991b1b}
+    .badge.opt{background:#e5e7eb;color:#6b7280}
+    .form-row{margin-bottom:12px}
+    .form-row:last-child{margin-bottom:0}
+    .form-row label{
+      font-size:12px;font-weight:600;color:var(--fg-2);
+      display:flex;align-items:center;gap:4px;margin-bottom:3px;
+    }
+    .form-row label .hint{font-weight:400;color:var(--muted);font-size:11px}
+    .form-row input{
+      width:100%;padding:8px 12px;
+      border:1px solid var(--border);border-radius:var(--radius-sm);
+      font-size:13px;font-family:var(--font-mono);
+      background:var(--surface);color:var(--fg);
+      transition:border-color 0.2s,box-shadow 0.2s;outline:none;
+    }
+    .form-row input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,87,1,0.08)}
+    .form-row input::placeholder{color:var(--muted);font-family:var(--font-body)}
+    .form-row .help{
+      font-size:11px;color:var(--muted);margin-top:2px;
+    }
+    .form-row .help a{color:var(--accent);text-decoration:none}
+    .form-row .help a:hover{text-decoration:underline}
+
+    .env-preview{
+      background:#1e1e2e;color:#cdd6f4;
+      border-radius:var(--radius-md);
+      padding:18px 22px;
+      font-family:var(--font-mono);font-size:12px;
+      line-height:1.8;white-space:pre;overflow-x:auto;
+      margin-top:14px;position:relative;
+    }
+
+    /* ===== Buttons ===== */
+    .btn-row{
+      display:flex;gap:10px;
+      margin-top:28px;padding-top:20px;
+      border-top:1px solid var(--border);
+      justify-content:space-between;
+    }
+    .btn{
+      padding:10px 24px;border-radius:var(--radius-md);
+      font-size:14px;font-weight:600;cursor:pointer;
+      border:none;font-family:var(--font-body);
+      transition:all 0.2s;
+      display:inline-flex;align-items:center;gap:6px;
+    }
+    .btn-prev{background:var(--bg);color:var(--fg-2);border:1px solid var(--border)}
+    .btn-prev:hover{background:var(--border);color:var(--fg)}
+    .btn-next{background:var(--accent);color:#fff;margin-left:auto}
+    .btn-next:hover{background:var(--accent-hover)}
+    .btn-done{background:var(--success);color:#fff;margin-left:auto}
+    .btn-done:hover{background:#047857}
+    .btn:disabled{opacity:0.35;cursor:not-allowed}
+
+    /* ===== Final ===== */
+    .done-box{
+      background:#d1fae5;border:2px solid #6ee7b7;
+      border-radius:var(--radius-lg);padding:24px;
+      text-align:center;margin-top:20px;
+      animation:cardIn 0.4s ease;
+    }
+    .done-box .emoji{font-size:48px;margin-bottom:8px}
+    .done-box h2{font-size:24px;color:#065f46;margin-bottom:6px}
+    .done-box p{color:#047857;font-size:15px}
+
+    a.link-card{
+      display:inline-flex;align-items:center;gap:8px;
+      margin-top:14px;padding:10px 18px;
+      background:#fff;border-radius:var(--radius-md);
+      color:var(--fg);font-weight:600;text-decoration:none;
+      font-size:14px;border:1px solid var(--border);
+      transition:box-shadow 0.2s;
+    }
+    a.link-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.07)}
+
+    /* ===== Responsive ===== */
+    @media(max-width:640px){
+      .step-card{padding:24px 18px}
+      .btn{font-size:13px;padding:8px 18px}
+      .progress-label{font-size:9px;width:56px}
+      .progress-dot{width:28px;height:28px;font-size:11px}
+    }
+
+    /* ===== Prefers dark (subtle adapt) ===== */
+    @media(prefers-color-scheme:dark){
+      :root{
+        --bg:#1a1a1a;--surface:#242424;
+        --fg:#f0f0f0;--fg-2:#c0c0c0;--muted:#888;
+        --border:#333;
+        --accent:#ff6b2b;
+      }
+      .env-group{background:#1e1e1e}
+      .tabs{background:#1e1e1e}
+      .btn-prev{background:#1e1e1e}
+      .code-block{background:#0d0d1a}
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🚀 配置向导</h1>
+  <p class="subtitle">跟着步骤走，5 分钟完成 高考志愿填报 Agent 的搭建</p>
+</div>
+
+<!-- Progress -->
+<div class="progress-wrap">
+  <div class="progress-bar" id="pbar"></div>
+  <div class="progress-labels" id="plabels"></div>
+</div>
+
+<div class="main-wrap">
+
+  <!-- ====== Step 1: 环境准备 ====== -->
+  <div class="step-card active" id="s1">
+    <h2>1. 环境准备</h2>
+    <p class="step-desc">安装项目运行所需的两个基础工具</p>
+
+    <h3>安装 Bun（JavaScript 运行时）</h3>
+    <p>Bun 负责编译 TypeScript、安装依赖、启动服务。</p>
+    <div class="code-block"><span class="c2">powershell -c "irm bun.sh/install.ps1 | iex"</span></div>
+    <div class="terminal-guide">
+      <strong>📋 如何执行：</strong>
+      <div class="steps">
+        <div class="step"><span class="step-num">1</span><span class="step-text">右键点击屏幕左下角 <strong>开始菜单</strong>（田字图标）</span></div>
+        <div class="step"><span class="step-num">2</span><span class="step-text">选择 <strong>"终端"</strong> 或 <strong>"Windows PowerShell"</strong></span></div>
+        <div class="step"><span class="step-num">3</span><span class="step-text">点击上方代码块的 <strong>📋 复制</strong> 按钮，然后 <span class="key">Ctrl</span> + <span class="key">V</span> 粘贴到终端</span></div>
+        <div class="step"><span class="step-num">4</span><span class="step-text">按 <span class="key">Enter</span> 键执行命令</span></div>
+        <div class="step"><span class="step-num">5</span><span class="step-text">安装完成后<strong>关闭终端重新打开</strong>，输入 <code style="background:#e0f2fe;padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-weight:600">bun --version</code> 验证。显示版本号则无误可关闭；<strong>显示"不是内部命令"则需检查是否下载成功，或手动将 Bun 添加到系统 PATH</strong></span></div>
+      </div>
+    </div>
+    <div class="tip"><span class="icon">💡</span><span>安装后输入 <code style="background:#fde68a;padding:1px 5px;border-radius:3px;font-family:var(--font-mono)">bun --version</code> 看到版本号即成功。</span></div>
+
+    <h3>下载 Qdrant（向量数据库）</h3>
+    <p>从 GitHub 下载 <strong>Windows</strong> 平台的 qdrant 可执行文件。</p>
+    <p>找到 <code>qdrant-x86_64-pc-windows-msvc.zip</code> → 下载 → 解压到<strong>任意目录</strong>（比如 <code>D:\qdrant</code>），里面有 <code>qdrant.exe</code>。</p>
+    <div class="tip"><span class="icon">📝</span><span><strong>记住你解压的目录路径</strong>，步骤 4 启动 Qdrant 时需要用到。</span></div>
+    <p style="font-size:12px;color:var(--fg-2)"><a href="https://github.com/qdrant/qdrant/releases" target="_blank" rel="noopener" style="color:var(--accent);font-weight:500">→ GitHub Releases 下载页面</a></p>
+
+    <div class="btn-row">
+      <button class="btn btn-prev" disabled>上一步</button>
+      <button class="btn btn-next" onclick="go(2)">下一步 →</button>
+    </div>
+  </div>
+
+
+  <!-- ====== Step 2: 配置环境变量 ====== -->
+  <div class="step-card" id="s2">
+    <h2>2. 配置环境变量</h2>
+    <p class="step-desc">在下方表单填写 API Key，然后点击按钮直接写入项目根目录的 <code>.env</code> 文件</p>
+
+    <div class="env-group">
+      <h4>🧠 LLM 大模型 <span class="badge req">必填</span></h4>
+      <div class="form-row">
+        <label>LLM_API_KEY <span class="hint">— DeepSeek API Key</span></label>
+        <input type="password" data-key="LLM_API_KEY" placeholder="sk-xxxxxxxxxxxxxxxx">
+        <div class="help">👉 到 <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">platform.deepseek.com</a> 创建 Key。也支持其他 OpenAI 兼容接口。<br>💰 充值 <strong>2-3 块钱</strong>即可，够用很久。</div>
+      </div>
+      <div class="form-row">
+        <label>LLM_BASE_URL</label>
+        <input type="text" data-key="LLM_BASE_URL" value="https://api.deepseek.com">
+      </div>
+      <div class="form-row">
+        <label>LLM_MODEL</label>
+        <input type="text" data-key="LLM_MODEL" value="deepseek-v4-flash">
+        <div class="help">可选 deepseek-v4-pro、deepseek-v4-flash、deepseek-chat</div>
+      </div>
+    </div>
+
+    <div class="env-group">
+      <h4>🔢 Embedding 向量化 <span class="badge req">必填</span></h4>
+      <div class="form-row">
+        <label>EMBEDDING_API_KEY <span class="hint">— 阿里云 DashScope</span></label>
+        <input type="password" data-key="EMBEDDING_API_KEY" placeholder="sk-xxxxxxxxxxxxxxxx">
+        <div class="help">👉 到 <a href="https://dashscope.console.aliyun.com/apiKey" target="_blank" rel="noopener">dashscope.console.aliyun.com</a> 创建 Key（新用户有免费额度）。💰 即使付费，<strong>2-3 块钱</strong>也绰绰有余。</div>
+      </div>
+      <div class="form-row">
+        <label>EMBEDDING_URL</label>
+        <input type="text" data-key="EMBEDDING_URL" value="https://dashscope.aliyuncs.com/compatible-mode/v1/embeddings">
+      </div>
+      <div class="form-row">
+        <label>EMBEDDING_MODEL</label>
+        <input type="text" data-key="EMBEDDING_MODEL" value="text-embedding-v4">
+      </div>
+    </div>
+
+    <div class="env-group">
+      <h4>🔍 搜索引擎 <span class="badge req">必填</span></h4>
+      <div class="form-row">
+        <label>SEARCH_API_KEY <span class="hint">— Tavily</span></label>
+        <input type="password" data-key="SEARCH_API_KEY" placeholder="tvly-xxxxxxxxxxxxxxxx">
+        <div class="help">👉 到 <a href="https://app.tavily.com/home" target="_blank" rel="noopener">app.tavily.com</a> 创建 Key（月免 1000 次，免费额度足够日常使用）。</div>
+      </div>
+    </div>
+
+    <div class="env-group">
+      <h4>⚙️ 其他 <span class="badge opt">可选</span></h4>
+      <div class="form-row">
+        <label>QDRANT_URL</label>
+        <input type="text" data-key="QDRANT_URL" value="http://127.0.0.1:6333">
+      </div>
+      <div class="form-row">
+        <label>PORT <span class="hint">— 服务端口</span></label>
+        <input type="text" data-key="PORT" value="3211">
+      </div>
+    </div>
+
+    <div class="env-preview" id="envPrev"><span class="c1"># 填写上方表单后，这里自动生成 .env 内容，点击下方按钮写入项目根目录</span></div>
+    <button class="btn-copy" id="btnWriteEnv" style="position:static;margin-top:8px;float:right;background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;padding:8px 16px" onclick="writeEnv()">📝 写入 .env 到项目根目录（需选择目录）</button>
+
+    <div class="btn-row">
+      <button class="btn btn-prev" onclick="go(1)">← 上一步</button>
+      <button class="btn btn-next" onclick="go(3)">下一步 →</button>
+    </div>
+  </div>
+
+  <!-- ====== Step 3: 启动 Qdrant ====== -->
+  <div class="step-card" id="s3">
+    <h2>3. 启动 Qdrant</h2>
+    <p class="step-desc">启动向量数据库，默认监听 localhost:6333</p>
+
+    <div class="code-block"><span class="c2">D:\qdrant\qdrant.exe --config-path qdrant\config\qdrant.yaml</span></div>
+    <p style="font-size:12px;color:var(--muted)">⚠️ 把 <code>D:\qdrant\</code> 换成你在步骤 1 解压的实际目录</p>
+
+    <div class="terminal-guide">
+      <strong>📋 如何执行：</strong>
+      <div class="steps">
+        <div class="step"><span class="step-num">1</span><span class="step-text">右键开始菜单，打开 <strong>"终端"</strong> 或 <strong>"PowerShell"</strong></span></div>
+        <div class="step"><span class="step-num">2</span><span class="step-text">先进入项目目录：输入 <code style="background:#e0f2fe;padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-weight:600">cd D:\gaokao-agent</code>（改成你的实际路径），按 <span class="key">Enter</span></span></div>
+        <div class="step"><span class="step-num">3</span><span class="step-text">复制上方命令，把路径换成步骤 1 解压的目录，按 <span class="key">Enter</span> 执行</span></div>
+        <div class="step"><span class="step-num">4</span><span class="step-text">看到日志输出说明启动成功。<strong>⚠️ 不要关闭这个终端窗口！</strong></span></div>
+      </div>
+    </div>
+
+    <div class="info"><span class="icon">🌐</span><span>访问 <a href="http://127.0.0.1:6333" target="_blank" rel="noopener" style="color:var(--accent);font-weight:500">http://127.0.0.1:6333</a>，看到 JSON 包含 <code>"title":"qdrant"</code> 就是成功了。<br>⚠️ <strong>保持这个终端开着</strong>，别关。</span></div>
+    <div class="warn"><span class="icon">⚠️</span><span><strong>常见问题：</strong>端口被占用 → 先关掉占用程序。Windows 用户确认 qdrant.exe 和 qdrant\config\ 都在项目根目录。</span></div>
+
+    <div class="btn-row">
+      <button class="btn btn-prev" onclick="go(2)">← 上一步</button>
+      <button class="btn btn-next" onclick="go(4)">下一步 →</button>
+    </div>
+  </div>
+
+  <!-- ====== Step 4: 初始化知识库 ====== -->
+  <div class="step-card" id="s4">
+    <h2>4. 初始化知识库</h2>
+    <p class="step-desc">打开一个新终端，<strong>进入项目根目录</strong>，依次执行下面三条命令：</p>
+
+    <div class="terminal-guide" style="margin-bottom:20px">
+      <strong>📋 操作说明：</strong>
+      <div class="steps">
+        <div class="step"><span class="step-num">1</span><span class="step-text"><strong>新开一个终端窗口</strong>（不要用步骤 4 正在运行 Qdrant 的那个窗口）</span></div>
+        <div class="step"><span class="step-num">2</span><span class="step-text">先进入项目目录：输入 <code style="background:#e0f2fe;padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-weight:600">cd D:\gaokao-agent</code>（改成你的实际路径），按 <span class="key">Enter</span></span></div>
+        <div class="step"><span class="step-num">3</span><span class="step-text">依次复制下方三条命令，<strong>每条执行完等它结束</strong>再执行下一条</span></div>
+        <div class="step"><span class="step-num">4</span><span class="step-text">每次粘贴后按 <span class="key">Enter</span> 键执行</span></div>
+      </div>
+    </div>
+
+    <h3>① 创建集合</h3>
+    <div class="code-block"><span class="c2">bun run qdrant/scripts/create-collections.cjs</span></div>
+    <p style="font-size:12px;color:var(--muted)">创建 schools、majors、policies_rules、province_data、style_cases 五个集合</p>
+
+    <h3>② 同步 Wiki 数据</h3>
+    <div class="code-block"><span class="c2">bun run qdrant/scripts/sync-wiki-to-staging.ts</span></div>
+    <p style="font-size:12px;color:var(--muted)">将 wiki/ 下的 Markdown 复制到 staging 目录并切分段落</p>
+
+    <h3>③ 导入向量库</h3>
+    <div class="code-block"><span class="c2">bun run qdrant/scripts/ingest-staging.cjs</span></div>
+    <p style="font-size:12px;color:var(--muted)">对文本生成 Embedding 写入 Qdrant（首次约 1-3 分钟，取决于 API 速度）</p>
+
+    <div class="tip"><span class="icon">⏱️</span><span>执行完根目录会出现 <code>.qdrant-initialized</code> 标记文件，表示初始化成功。<strong>过程约 1-3 分钟，运行中不要关闭终端，执行完再关。</strong></span></div>
+
+    <div class="btn-row">
+      <button class="btn btn-prev" onclick="go(3)">← 上一步</button>
+      <button class="btn btn-next" onclick="go(5)">下一步 →</button>
+    </div>
+  </div>
+
+  <!-- ====== Step 5: 启动 ====== -->
+  <div class="step-card" id="s5">
+    <h2>5. 启动服务 🎉</h2>
+    <p class="step-desc">打开一个新终端，进入项目根目录，依次执行：</p>
+
+    <div class="code-block"><span class="c2">bun run build</span>
+<span class="c2">bun run server</span></div>
+
+    <div class="terminal-guide">
+      <strong>📋 操作说明：</strong>
+      <div class="steps">
+        <div class="step"><span class="step-num">1</span><span class="step-text">打开一个新终端，<strong>先进入项目目录</strong>：输入 <code style="background:#e0f2fe;padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-weight:600">cd D:\gaokao-agent</code>（改成你的实际路径），按 <span class="key">Enter</span></span></div>
+        <div class="step"><span class="step-num">2</span><span class="step-text">粘贴第一行 <code style="background:#e0f2fe;padding:1px 5px;border-radius:3px;font-family:var(--font-mono)">bun run build</code>，按 <span class="key">Enter</span> 执行构建</span></div>
+        <div class="step"><span class="step-num">3</span><span class="step-text">构建完成后，粘贴第二行 <code style="background:#e0f2fe;padding:1px 5px;border-radius:3px;font-family:var(--font-mono)">bun run server</code>，按 <span class="key">Enter</span> 启动服务</span></div>
+        <div class="step"><span class="step-num">4</span><span class="step-text">看到 <code style="background:#e0f2fe;padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-weight:600">🚀 高考志愿Agent API</code> 字样说明启动成功。<strong>⚠️ 不要关闭这个终端窗口！</strong></span></div>
+      </div>
+    </div>
+
+    <div class="done-box">
+      <div class="emoji">🎓</div>
+      <h2>配置完成！</h2>
+      <p>服务已启动，点击下方链接开始使用</p>
+      <a href="http://127.0.0.1:3211" class="link-card" style="font-size:16px;font-weight:700;padding:14px 28px">🚀 http://127.0.0.1:3211</a>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-prev" onclick="go(4)">← 上一步</button>
+      <button class="btn btn-done" onclick="markDone()">✅ 完成配置</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const TOTAL = 5;
+const STEPS = ['环境准备','配置变量','启动 Qdrant','初始化知识库','启动服务'];
+let step = 1;
+
+// Build progress bar
+(function(){
+  const pbar = document.getElementById('pbar');
+  const plabels = document.getElementById('plabels');
+  for(let i=1;i<=TOTAL;i++){
+    const d = document.createElement('div');
+    d.className = 'progress-dot';
+    d.dataset.step = i;
+    d.textContent = i;
+    d.addEventListener('click', () => go(i));
+    pbar.appendChild(d);
+    if(i < TOTAL){
+      const l = document.createElement('div');
+      l.className = 'progress-line';
+      pbar.appendChild(l);
+    }
+    const lb = document.createElement('div');
+    lb.className = 'progress-label';
+    lb.textContent = STEPS[i-1];
+    plabels.appendChild(lb);
+  }
+})();
+
+function go(n){
+  if(n<1||n>TOTAL) return;
+  document.querySelectorAll('.step-card').forEach(c=>c.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  step=n;
+  update();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function update(){
+  const dots = document.querySelectorAll('#pbar .progress-dot');
+  const lines = document.querySelectorAll('#pbar .progress-line');
+  const labels = document.querySelectorAll('#plabels .progress-label');
+  dots.forEach((d,i)=>{
+    d.classList.remove('active','done');
+    if(i+1===step) d.classList.add('active');
+    else if(i+1<step){ d.classList.add('done'); d.textContent='✓'; }
+    else d.textContent = i+1;
+  });
+  lines.forEach((l,i)=>{ l.classList.toggle('done', i+1 < step); });
+  labels.forEach((l,i)=>{ l.classList.toggle('active', i+1 === step); });
+  try{localStorage.setItem('gaokao_setup_step',step)}catch{}
+}
+
+// Platform tabs
+document.querySelectorAll('.tabs').forEach(group=>{
+  const gname = group.dataset.tabs;
+  group.querySelectorAll('.tab').forEach(tab=>{
+    tab.addEventListener('click',()=>{
+      group.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelectorAll(`.tab-content[data-tabs="${gname}"]`).forEach(c=>{
+        c.classList.toggle('active', c.dataset.os === tab.dataset.os);
+      });
+    });
+  });
+});
+
+// Code copy buttons
+document.querySelectorAll('.code-block').forEach(block=>{
+  const btn = document.createElement('button');
+  btn.className = 'btn-copy';
+  btn.textContent = '📋 复制';
+  btn.addEventListener('click',()=>{
+    const text = block.innerText.replace(/📋 复制\n?/g,'').trim();
+    navigator.clipboard.writeText(text).then(()=>{
+      btn.textContent='✓';
+      btn.classList.add('copied');
+      setTimeout(()=>{btn.textContent='📋 复制';btn.classList.remove('copied')},1800);
+    }).catch(()=>{
+      const ta=document.createElement('textarea');ta.value=text;
+      document.body.appendChild(ta);ta.select();document.execCommand('copy');
+      document.body.removeChild(ta);
+      btn.textContent='✓';btn.classList.add('copied');
+      setTimeout(()=>{btn.textContent='📋 复制';btn.classList.remove('copied')},1800);
+    });
+  });
+  block.style.position='relative';
+  block.appendChild(btn);
+});
+
+// .env preview
+const DEFAULTS = {
+  LLM_API_KEY:'',LLM_BASE_URL:'https://api.deepseek.com',LLM_MODEL:'deepseek-v4-flash',
+  EMBEDDING_URL:'https://dashscope.aliyuncs.com/compatible-mode/v1/embeddings',
+  EMBEDDING_MODEL:'text-embedding-v4',EMBEDDING_API_KEY:'',
+  VECTOR_SIZE:'1024',BATCH_SIZE:'10',
+  QDRANT_URL:'http://127.0.0.1:6333',STAGING_ROOT:'./qdrant/staging',
+  SEARCH_PROVIDER:'tavily',SEARCH_API_KEY:'',
+  PORT:'3211',VITE_DEV_PORT:'3210'
+};
+const ENV_ORDER = [
+  ['# LLM 配置'],['LLM_API_KEY','LLM_BASE_URL','LLM_MODEL'],
+  ['','# Embedding 配置'],['EMBEDDING_URL','EMBEDDING_MODEL','EMBEDDING_API_KEY','VECTOR_SIZE','BATCH_SIZE'],
+  ['','# Qdrant 配置'],['QDRANT_URL','STAGING_ROOT'],
+  ['','# 搜索引擎'],['SEARCH_PROVIDER','SEARCH_API_KEY'],
+  ['','# 端口'],['PORT','VITE_DEV_PORT']
+];
+
+function updateEnv(){
+  const lines=[];
+  for(const row of ENV_ORDER){
+    if(row.length===1){ lines.push(row[0]); continue; }
+    if(row.length===1 && row[0]===''){ lines.push(''); continue; }
+    for(const key of row){
+      const inp = document.querySelector(`[data-key="${key}"]`);
+      lines.push(key+'='+(inp ? (inp.value||DEFAULTS[key]||'') : (DEFAULTS[key]||'')));
+    }
+  }
+  document.getElementById('envPrev').textContent = lines.join('\n');
+}
+document.querySelectorAll('#s2 input').forEach(inp=>{ inp.addEventListener('input',updateEnv); });
+updateEnv();
+
+async function writeEnv(){
+  const text = document.getElementById('envPrev').textContent;
+  const btn = document.getElementById('btnWriteEnv');
+
+  if ('showDirectoryPicker' in window) {
+    try {
+      const dirHandle = await window.showDirectoryPicker({
+        mode: 'readwrite',
+      });
+      const fileHandle = await dirHandle.getFileHandle('.env', { create: true });
+      const writable = await fileHandle.createWritable();
+      await writable.write(text);
+      await writable.close();
+      btn.textContent = '✓ 已写入';
+      btn.classList.add('copied');
+      btn.style.background = 'var(--success)';
+      btn.style.borderColor = 'var(--success)';
+      setTimeout(() => {
+        btn.textContent = '📝 写入 .env 到项目根目录（需选择目录）';
+        btn.classList.remove('copied');
+        btn.style.background = 'var(--accent)';
+        btn.style.borderColor = 'var(--accent)';
+      }, 2500);
+      return;
+    } catch (err) {
+      if (err.name === 'AbortError') return; // 用户取消选择
+      alert('写入失败：' + (err.message || err));
+      return;
+    }
+  }
+
+  // 不支持 File System Access API
+  alert('当前浏览器不支持直接写入文件。请使用 Chrome 或 Edge 打开此页面。');
+}
+
+function markDone(){
+  document.querySelectorAll('.progress-dot').forEach(d=>{d.classList.remove('active');d.classList.add('done');d.textContent='✓'});
+  document.querySelectorAll('.progress-line').forEach(l=>l.classList.add('done'));
+  try{localStorage.setItem('gaokao_setup_done','true')}catch{}
+}
+
+// Init
+try{ const s=localStorage.getItem('gaokao_setup_step'); if(s){ const n=Number(s); if(n>=1&&n<=TOTAL) go(n); } }catch{}
+update();
+</script>
+
+</body>
+</html>
