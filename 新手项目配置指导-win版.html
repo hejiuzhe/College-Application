@@ -388,9 +388,41 @@
   </div>
 
 
-  <!-- ====== Step 2: 配置环境变量 ====== -->
+  <!-- ====== Step 2: 获取项目 ====== -->
   <div class="step-card" id="s2">
-    <h2>2. 配置环境变量</h2>
+    <h2>2. 获取项目</h2>
+    <p class="step-desc">克隆仓库并安装依赖</p>
+
+    <h3>克隆代码</h3>
+    <div class="code-block"><span class="c2">git clone https://github.com/Zeke-777/gaokao-agent.git</span>
+<span class="c2">cd gaokao-agent</span></div>
+    <div class="terminal-guide">
+      <strong>📋 如何执行：</strong>
+      <div class="steps">
+        <div class="step"><span class="step-num">1</span><span class="step-text">打开终端，输入 <code style="background:#e0f2fe;padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-weight:600">cd D:\</code> 按 <span class="key">Enter</span>（换成你想放的目录）</span></div>
+        <div class="step"><span class="step-num">2</span><span class="step-text">复制第一行命令粘贴，按 <span class="key">Enter</span> 克隆仓库</span></div>
+        <div class="step"><span class="step-num">3</span><span class="step-text">再复制第二行，按 <span class="key">Enter</span> 进入项目目录</span></div>
+        <div class="step"><span class="step-num">4</span><span class="step-text">⚠️ 后续所有命令都要在这个目录下执行！</span></div>
+      </div>
+    </div>
+
+    <div class="tip"><span class="icon">💡</span><span>没装 Git？到 GitHub 页面点 <strong>"Download ZIP"</strong> 下载解压，然后终端 <code style="background:#fde68a;padding:1px 5px;border-radius:3px;font-family:var(--font-mono)">cd</code> 到解压目录即可。</span></div>
+
+    <h3>安装依赖</h3>
+    <div class="code-block"><span class="c2">bun install</span></div>
+    <div class="terminal-guide">
+      <strong>📋 怎么执行：</strong>粘贴命令到终端，按 <span class="key">Enter</span> 执行，等待依赖安装完成（约 10-30 秒）。
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-prev" onclick="go(1)">← 上一步</button>
+      <button class="btn btn-next" onclick="go(3)">下一步 →</button>
+    </div>
+  </div>
+
+  <!-- ====== Step 3: 配置环境变量 ====== -->
+  <div class="step-card" id="s3">
+    <h2>3. 配置环境变量</h2>
     <p class="step-desc">在下方表单填写 API Key，然后点击按钮直接写入项目根目录的 <code>.env</code> 文件</p>
 
     <div class="env-group">
@@ -450,17 +482,19 @@
     </div>
 
     <div class="env-preview" id="envPrev"><span class="c1"># 填写上方表单后，这里自动生成 .env 内容，点击下方按钮写入项目根目录</span></div>
-    <button class="btn-copy" id="btnWriteEnv" style="position:static;margin-top:8px;float:right;background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;padding:8px 16px" onclick="writeEnv()">📝 写入 .env 到项目根目录（需选择目录）</button>
+    <div style="display:flex;justify-content:flex-end;margin-top:8px">
+      <button class="btn-copy" id="btnWriteEnv" style="position:static;background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;padding:8px 16px" onclick="writeEnv()">📝 写入 .env 到项目根目录（需选择目录）</button>
+    </div>
 
     <div class="btn-row">
-      <button class="btn btn-prev" onclick="go(1)">← 上一步</button>
-      <button class="btn btn-next" onclick="go(3)">下一步 →</button>
+      <button class="btn btn-prev" onclick="go(2)">← 上一步</button>
+      <button class="btn btn-next" onclick="go(4)">下一步 →</button>
     </div>
   </div>
 
-  <!-- ====== Step 3: 启动 Qdrant ====== -->
-  <div class="step-card" id="s3">
-    <h2>3. 启动 Qdrant</h2>
+  <!-- ====== Step 4: 启动 Qdrant ====== -->
+  <div class="step-card" id="s4">
+    <h2>4. 启动 Qdrant</h2>
     <p class="step-desc">启动向量数据库，默认监听 localhost:6333</p>
 
     <div class="code-block"><span class="c2">D:\qdrant\qdrant.exe --config-path qdrant\config\qdrant.yaml</span></div>
@@ -480,14 +514,14 @@
     <div class="warn"><span class="icon">⚠️</span><span><strong>常见问题：</strong>端口被占用 → 先关掉占用程序。Windows 用户确认 qdrant.exe 和 qdrant\config\ 都在项目根目录。</span></div>
 
     <div class="btn-row">
-      <button class="btn btn-prev" onclick="go(2)">← 上一步</button>
-      <button class="btn btn-next" onclick="go(4)">下一步 →</button>
+      <button class="btn btn-prev" onclick="go(3)">← 上一步</button>
+      <button class="btn btn-next" onclick="go(5)">下一步 →</button>
     </div>
   </div>
 
-  <!-- ====== Step 4: 初始化知识库 ====== -->
-  <div class="step-card" id="s4">
-    <h2>4. 初始化知识库</h2>
+  <!-- ====== Step 5: 初始化知识库 ====== -->
+  <div class="step-card" id="s5">
+    <h2>5. 初始化知识库</h2>
     <p class="step-desc">打开一个新终端，<strong>进入项目根目录</strong>，依次执行下面三条命令：</p>
 
     <div class="terminal-guide" style="margin-bottom:20px">
@@ -515,14 +549,14 @@
     <div class="tip"><span class="icon">⏱️</span><span>执行完根目录会出现 <code>.qdrant-initialized</code> 标记文件，表示初始化成功。<strong>过程约 1-3 分钟，运行中不要关闭终端，执行完再关。</strong></span></div>
 
     <div class="btn-row">
-      <button class="btn btn-prev" onclick="go(3)">← 上一步</button>
-      <button class="btn btn-next" onclick="go(5)">下一步 →</button>
+      <button class="btn btn-prev" onclick="go(4)">← 上一步</button>
+      <button class="btn btn-next" onclick="go(6)">下一步 →</button>
     </div>
   </div>
 
-  <!-- ====== Step 5: 启动 ====== -->
-  <div class="step-card" id="s5">
-    <h2>5. 启动服务 🎉</h2>
+  <!-- ====== Step 6: 启动 ====== -->
+  <div class="step-card" id="s6">
+    <h2>6. 启动服务 🎉</h2>
     <p class="step-desc">打开一个新终端，进入项目根目录，依次执行：</p>
 
     <div class="code-block"><span class="c2">bun run build</span>
@@ -546,7 +580,7 @@
     </div>
 
     <div class="btn-row">
-      <button class="btn btn-prev" onclick="go(4)">← 上一步</button>
+      <button class="btn btn-prev" onclick="go(5)">← 上一步</button>
       <button class="btn btn-done" onclick="markDone()">✅ 完成配置</button>
     </div>
   </div>
@@ -554,8 +588,8 @@
 </div>
 
 <script>
-const TOTAL = 5;
-const STEPS = ['环境准备','配置变量','启动 Qdrant','初始化知识库','启动服务'];
+const TOTAL = 6;
+const STEPS = ['环境准备','获取项目','配置变量','启动 Qdrant','初始化知识库','启动服务'];
 let step = 1;
 
 // Build progress bar
@@ -672,7 +706,7 @@ function updateEnv(){
   }
   document.getElementById('envPrev').textContent = lines.join('\n');
 }
-document.querySelectorAll('#s2 input').forEach(inp=>{ inp.addEventListener('input',updateEnv); });
+document.querySelectorAll('#s3 input').forEach(inp=>{ inp.addEventListener('input',updateEnv); });
 updateEnv();
 
 async function writeEnv(){
