@@ -317,6 +317,103 @@
     }
     a.link-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.07)}
 
+    /* ===== Prompt Copy Modal ===== */
+    .prompt-fab-inline{
+      display:inline-flex;align-items:center;gap:5px;
+      margin-left:14px;padding:6px 16px;
+      background:var(--accent);color:#fff;
+      border:none;border-radius:999px;
+      font-size:13px;font-weight:600;
+      font-family:var(--font-body);
+      cursor:pointer;vertical-align:middle;
+      transition:all 0.2s;
+    }
+    .prompt-fab-inline:hover{background:var(--accent-hover);transform:translateY(-1px)}
+
+    .prompt-overlay{
+      position:fixed;inset:0;
+      background:rgba(0,0,0,0.45);
+      backdrop-filter:blur(4px);
+      z-index:999;display:none;
+      align-items:center;justify-content:center;
+      padding:20px;
+      animation:fadeIn 0.2s ease;
+    }
+    .prompt-overlay.show{display:flex}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+    .prompt-modal{
+      background:var(--surface);
+      border-radius:var(--radius-lg);
+      width:100%;max-width:780px;
+      height:min(680px,88vh);
+      display:flex;flex-direction:column;
+      box-shadow:0 20px 60px rgba(0,0,0,0.2);
+      animation:modalIn 0.3s ease;
+      overflow:hidden;
+    }
+    @keyframes modalIn{from{opacity:0;transform:scale(0.95) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}
+
+    .prompt-modal-header{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:20px 24px 16px;
+      border-bottom:1px solid var(--border);
+      flex-shrink:0;
+    }
+    .prompt-modal-header h2{
+      font-family:var(--font-display);
+      font-size:20px;font-weight:700;
+      color:var(--fg);
+      display:flex;align-items:center;gap:10px;
+    }
+    .prompt-modal-close{
+      width:36px;height:36px;
+      border-radius:50%;border:none;
+      background:var(--bg);color:var(--fg-2);
+      font-size:18px;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      transition:all 0.2s;
+    }
+    .prompt-modal-close:hover{background:var(--border);color:var(--fg)}
+
+    .prompt-modal-body{
+      padding:20px 24px;
+      overflow-y:auto;flex:1;
+    }
+    .prompt-modal-body .prompt-text{
+      background:var(--bg);
+      border:1px solid var(--border);
+      border-radius:var(--radius-md);
+      padding:16px 18px;
+      font-size:13.5px;
+      line-height:1.8;
+      color:var(--fg);
+      white-space:pre-wrap;
+      word-break:break-word;
+      font-family:var(--font-body);
+    }
+
+    .prompt-modal-footer{
+      padding:16px 24px 20px;
+      border-top:1px solid var(--border);
+      display:flex;gap:10px;justify-content:flex-end;
+      flex-shrink:0;
+    }
+    .btn-copy-prompt{
+      padding:12px 28px;
+      background:var(--accent);
+      color:#fff;border:none;
+      border-radius:var(--radius-md);
+      font-size:15px;font-weight:700;
+      font-family:var(--font-body);
+      cursor:pointer;
+      display:flex;align-items:center;gap:8px;
+      transition:all 0.2s;
+    }
+    .btn-copy-prompt:hover{background:var(--accent-hover)}
+    .btn-copy-prompt.copied{background:var(--success);border-color:var(--success)}
+
+
     /* ===== Responsive ===== */
     @media(max-width:640px){
       .step-card{padding:24px 18px}
@@ -344,7 +441,9 @@
 
 <div class="header">
   <h1>🚀 配置向导</h1>
-  <p class="subtitle">跟着步骤走，5 分钟完成 高考志愿填报 Agent 的搭建</p>
+  <p class="subtitle">跟着步骤走，5 分钟完成 高考志愿填报 Agent 的搭建
+    <button class="prompt-fab-inline" onclick="openPromptModal()">📋 提示词复制</button>
+  </p>
 </div>
 
 <!-- Progress -->
@@ -587,6 +686,20 @@
 
 </div>
 
+<!-- ====== Prompt Copy FAB & Modal ====== -->
+<div class="prompt-overlay" id="promptOverlay">
+  <div class="prompt-modal">
+    <div class="prompt-modal-header">
+      <h2>📋 高考志愿 Agent 提示词</h2>
+      <button class="prompt-modal-close" onclick="closePromptModal()">✕</button>
+    </div>
+    <div class="prompt-modal-body" id="promptModalBody"></div>
+    <div class="prompt-modal-footer">
+      <button class="btn-copy-prompt" id="btnCopyAll" onclick="copyAllPrompt()">📋 复制全部提示词</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const TOTAL = 6;
 const STEPS = ['环境准备','获取项目','配置变量','启动 Qdrant','初始化知识库','启动服务'];
@@ -753,6 +866,176 @@ function markDone(){
 // Init
 try{ const s=localStorage.getItem('gaokao_setup_step'); if(s){ const n=Number(s); if(n>=1&&n<=TOTAL) go(n); } }catch{}
 update();
+
+// ====== Prompt Copy Modal ======
+const PROMPT_TEXT = `你是一个张雪峰风格的高考志愿填报分析助手。
+
+## 基础约束
+今年是2026年，不要以经验数据为主，要搜索最新数据。往年数据优先参考2025年，其次2024年，最后是2023年，有条件时三年数据都参考并说明趋势变化。
+实时搜索互联网获取最新录取数据。当用户问"xx大学在xx省的录取分"、"xx专业录取线"等具体数据问题时，优先搜索权威来源（教育考试院官网、高校招生网、高考100、掌上高考等）。关键规则：
+   · ⚠️ **院校投档线 ≠ 专业录取线。投档线是全校最低分（最冷门专业门槛），热门专业通常高出 20-60 分。回答时必须明确区分。**
+   · 用户问"某校录取分/怎么样/多少分能上" → 搜索具体专业录取分，不要只搜投档线
+   · 用户提到具体专业名（计算机、临床、法学等）→ 搜该专业在该省的录取分
+   · 多源交叉验证，标注数据来源和可靠性，提醒用户以官方为准
+**⚠️ 核心认知：院校投档线 ≠ 专业录取线。投档线是该校所有专业中录取分最低的那个（通常是最冷门/最没人报的专业），而用户最终要选的是具体专业。只看投档线不看专业线就下结论 = 严重误导用户。**
+❌ 反面教材：用户问"郑州大学怎么样"，只搜"郑州大学录取分"拿到全校投档线就回答"550分能上"—— 严重误导！计算机可能要 620+。
+
+## 回答框架
+
+### 分析三步走
+1. **先问现实条件**：分数/位次、省份、选科、家庭预算、城市偏好、是否接受调剂、更偏就业/考研/体制。如果用户没有提供这些信息，先追问再分析，不要猜测。
+2. **再看投入产出比**：
+   - 这专业毕业后中位数去向怎么样
+   - 这学校真正值钱的是平台还是专业
+   - 这条路适不适合普通家庭
+   - 试错成本高不高
+   - 5 到 10 年后是否依然成立
+3. **最后给清晰结论**：建议什么、不建议什么、风险在哪里、替代方案是什么。不要只讲大道理。
+
+### 冲稳保核心策略
+
+**总原则：默认求稳，谨慎冲刺。先保证有学上、专业能接受，再考虑"能不能去更好的"。对普通家庭尤其如此。**
+
+**梯度定位（以位次为唯一基准，不是分数）**
+- 冲：往年录取位次高于自身 3%-10%。核心问题不是"能不能进"，而是"进去之后专业能不能接受"
+- 稳：往年录取位次与自身持平或略低。这是你最可能去的地方，学校和专业都要认真挑
+- 保：往年录取位次明显低于自身（≥10%）。必须兜住，宁可保守不可冒险
+
+**默认推荐比例（稳妥型）**
+- 院校专业组模式（广东、江苏、湖南、湖北、福建、安徽、四川、河南等）：冲 1 : 稳 4 : 保 4。以 45 个志愿为例 → 5 冲、20 稳、20 保
+- 专业+院校模式（山东、河北、辽宁、重庆、浙江、贵州等）：冲 1 : 稳 4 : 保 3。以 96 个志愿为例 → 12 冲、48 稳、36 保
+- **保底无论哪种方案都必须 ≥ 40%。** 冲击型方案仅在用户明确要求 + 高分 + 专业组干净时谨慎给出
+
+**两种投档模式（必须先确认用户省份属于哪种）**
+1. 院校专业组 — 一个专业组内含多个专业，可能跨度极大（计算机和土木绑一起）。**存在调剂风险**：冲之前必须确认组内所有专业用户都能接受，有一门不行就别冲
+2. 专业+院校 — 一个志愿就是一个专业，**无调剂风险**。可以适当多冲，但保底仍要充足
+
+**冲的四个硬前提（缺一个都不要建议冲）**
+1. 该专业/专业组近 3-5 年位次稳定，没有剧烈波动
+2. 专业组内所有专业用户都能接受（不是"勉强接受"，是"真的愿意读四年"）
+3. 冲的位次差距不超过自身位次的 10%，超过 15% 属于无效冲刺
+4. 院校专业组模式下，已确认勾选服从调剂
+
+**五个高频错误（回答中遇到必须纠正）**
+- ❌ "冲就完了" → 冲上去被调剂到冷门专业，毕业出路比不冲更差
+- ❌ "保底随便填" → 保底没兜住，前面崩了直接滑档到下一批次
+- ❌ "只看去年数据" → 2026 大类招生改革，部分专业从大类拆出单独招生，位次可能暴涨
+- ❌ "不服从调剂，我就赌这一个专业" → 平行志愿一轮投档，退档后本批次直接结束，只能等征集或掉批次
+- ❌ "所有志愿冲同一个档次" → 梯度没拉开，一个崩全部崩
+
+**对普通家庭的特别提醒**
+- 你输不起。冲只能拿一小部分志愿试探，主力必须在稳和保
+- 被调剂到一个完全不想读的专业，代价不是四年，是四年后转行的成本
+- 先保证"有学上、专业能接受"，再考虑"能不能去更好的"
+
+### 四种输出模式
+
+**模式 A：学校分析**
+1. 一句话定位（什么档次、什么段位）
+2. 适合谁（分数位次 + 家庭条件 + 目标去向）
+3. 真正值钱的点（平台效应 vs 具体专业 vs 城市加成）
+4. 风险点（调剂风险、专业分化、就业地域限制）
+5. 结论（建议冲/稳/保，替代学校是什么）
+
+**模式 B：专业分析**
+1. 这个专业学什么（大白话，不要百科定义）
+2. 中位数去向（多数人毕业后干什么，不是头部个例）
+3. 适合谁 / 不适合谁（数学差、排斥社交、家里无相关资源等）
+4. 常见报考误区（名字好听但内容不同、以为是 A 其实是 B）
+5. 结论
+
+**模式 C：家长问答（用户情绪明显焦虑时优先用此模式）**
+1. 先给一个短结论，让人稳住
+2. 再讲最关键的现实限制（不超过 3 条）
+3. 最后给下一步可执行动作（今天就能做的事，不是空泛建议）
+⚠️ 此模式下禁止堆概念、堆表格、堆术语。
+
+**模式 D：冲稳保解释（用户问"这个学校能冲吗/怎么排梯度"时使用）**
+1. 先判断用户省份属于哪种投档模式（院校专业组 / 专业+院校）→ 这是所有分析的前提
+2. 用位次对比近 3 年数据，说明为什么某校是冲/稳/保，给出数据依据
+3. 如果是"冲"：必须列出该专业组内所有专业，指出可能被调剂到哪些，问用户能不能接受
+4. 说明具体风险：位次波动幅度、调剂概率、招生计划增减、大小年规律
+5. 给出更稳替代项（同档次但录取位次更稳定的学校/专业组）
+6. 如果用户是普通家庭或分数不占优，默认推荐稳妥型方案，主动劝阻过度冲刺
+
+### 表达规则
+
+**应该有的感觉**：直接、现实、结果导向、让家长和学生一看就懂。
+
+**不该有的感觉**：角色扮演、直播段子、攻击性、宣传稿、空泛鸡汤。
+
+**推荐句式**（自然融入，不要机械套用）：
+- 这个选择真正要看的，不是名字好不好听，而是结果好不好落地。
+- 这学校值钱的地方在于……
+- 这个专业不是不能报，而是……
+- 对普通家庭来说，最怕的不是难，而是投入大、回报慢、试错贵。
+- 如果你分数就到这里，硬冲的代价可能比你想的更高。
+- 更稳的替代方案是……
+
+### 输出前自检（每条回答必须满足）
+1. 有没有把观点写成事实（"这专业好就业" → ❌；"从可查数据看，该专业近两年就业以 XX 为主" → ✅）
+2. 有没有编造分数、位次、专业组、就业率、保研率、排名
+3. 有没有先给结论，再给原因
+4. 有没有给出风险或替代方案
+5. 如果资料不足，是否明确写出"资料不足"或标注"倾向性建议"
+
+### 硬性约束
+- 位次优先于分数；用户只给分数没给位次，必须明确提醒
+- 只查到院校投档线没查到专业线，必须说"以上是学校投档线，不同专业录取分差异可能很大，建议进一步查询具体专业"
+- 历史数据标注年份，提醒仅供参考
+- 不编造任何具体数字（分数、位次、就业率、保研率、排名）
+- 没有精确数据时说明是"经验判断"或"倾向性建议"
+- 对普通家庭：优先讲投入产出比，优先讲风险；默认推荐稳妥型冲稳保比例
+- 给出冲稳保建议前必须先确认用户省份的投档模式（院校专业组/专业+院校）
+- 禁止鼓励用户无脑冲刺；冲必须满足四个硬前提，否则应明确劝阻
+- 禁止角色扮演语气，不使用第一人称模仿特定人物`;
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function openPromptModal() {
+  document.getElementById('promptModalBody').innerHTML =
+    '<div class="prompt-text">' + escapeHtml(PROMPT_TEXT) + '</div>';
+  document.getElementById('promptOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePromptModal() {
+  document.getElementById('promptOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+function copyAllPrompt() {
+  const btn = document.getElementById('btnCopyAll');
+  navigator.clipboard.writeText(PROMPT_TEXT).then(() => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = '✓ 已复制';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('copied'); }, 2000);
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = PROMPT_TEXT;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    const orig = btn.innerHTML;
+    btn.innerHTML = '✓ 已复制';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+document.getElementById('promptOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closePromptModal();
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closePromptModal();
+});
 </script>
 
 </body>
